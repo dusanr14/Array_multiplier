@@ -1,0 +1,11 @@
+wns
+2,      8ns, 125MHz, WNS = 1.159
+	7ns, 143MHz, WNS = 0.633
+	6ns, 166MHz, WNS = 0.812
+	5ns, 200MHz, WNS = 0.138
+
+3,      10ns,100MHz, WNS = 0.613
+	9ns, 111MHz, WNS = 0.355
+	8.3ns,120MHz,WNS = 0.111
+	8ns, 125MHz, WNS = NEGATIV
+	7ns, 125MHZ, WNS = 

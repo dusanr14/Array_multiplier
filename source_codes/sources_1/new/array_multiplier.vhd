@@ -33,8 +33,11 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 entity array_multiplier is
     Generic(
+           -- first factor width
            WIDTHM: natural := 32;
+           -- second factor width
            WIDTHQ: natural := 32;
+           -- product width
            WIDTHP: natural := 32
     );
     Port ( clk : in STD_LOGIC;
@@ -48,13 +51,15 @@ entity array_multiplier is
 end array_multiplier;
 
 architecture Behavioral of array_multiplier is
-type std_2d_long is array (WIDTHQ downto 0) of
-    std_logic_vector(WIDTHM-1 downto 0);
 type std_2d is array (WIDTHQ downto 0) of
     std_logic_vector(WIDTHM-1 downto 0);
-signal m_s: std_2d_long;
+type std_2d_short is array (WIDTHQ-1 downto 0) of
+    std_logic_vector(WIDTHM-1 downto 0);
+-- wires that connect rows, m_s(0) is input
+signal m_s: std_2d;
+signal m_reg: std_2d_short;
 signal s_i_s, s_o_s: std_2d;
-signal q_s,q_s_o: STD_LOGIC_VECTOR(WIDTHQ-1 downto 0);
+signal q_s, q_s_o: STD_LOGIC_VECTOR(WIDTHQ-1 downto 0);
 signal c_o_s: STD_LOGIC_VECTOR(WIDTHQ-1 downto 0);
 signal product_s : STD_LOGIC_VECTOR(WIDTHM + WIDTHQ - 1 downto 0);
 begin
@@ -63,12 +68,26 @@ begin
  s_i_s(0) <= (others => '0');
  m_s(0) <= m_i;
  q_s <= q_i;
+ 
+    m_reg(0) <= m_s(0);
+ m_regs:
+ for i in 1 to WIDTHQ-1 generate
+    registers:
+    entity work.reg
+    generic map(WIDTH => WIDTHM)
+    port map (clk => clk,
+              rstN => rstN,
+              d_i => m_s(i),
+              q_o => m_reg(i));
+    --m_reg(2*i-1) <= m_s(2*i-1);
+ end generate;
+ 
  mul_array:
  for i in 0 to WIDTHQ-1 generate
     cells:
     entity work.array_mult_row(behavioral)
         generic map (WIDTHM => WIDTHM)
-        port map( m_i => m_s(i), --32
+        port map( m_i => m_reg(i), --32
                   q_i => q_s(i),
                   s_i => s_i_s(i), --32
                   c_i => '0', 

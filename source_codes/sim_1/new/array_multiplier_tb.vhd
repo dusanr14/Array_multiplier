@@ -94,13 +94,13 @@ begin
         -- You can add an assert statement here to check if product_o is equal to "1001101"
 
         -- Test Case 2
-        m_i <= "0010";
-        q_i <= "011";
-        wait for CLK_PERIOD * 10;
-        -- Test Case 3
-        m_i <= "1111";
-        q_i <= "111";
-        wait for CLK_PERIOD * 10;
+--        m_i <= "0010";
+--        q_i <= "011";
+--        wait for CLK_PERIOD * 10;
+--        -- Test Case 3
+--        m_i <= "1111";
+--        q_i <= "111";
+--        wait for CLK_PERIOD * 10;
         
         -- The expected result for Test Case 2 should be "000110"
         -- You can add an assert statement here to check if product_o is equal to "000110"

@@ -34,7 +34,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 entity array_multiplier_top is
    Generic(
            WIDTHM: natural := 32;
-           WIDTHQ: natural := 32;
+           WIDTHQ: natural := 3;
            WIDTHP: natural := 32
     );
     Port ( clk : in STD_LOGIC;
@@ -50,7 +50,7 @@ end array_multiplier_top;
 architecture Behavioral of array_multiplier_top is
 signal m_reg: STD_LOGIC_VECTOR  (WIDTHM-1 downto 0);
 signal q_reg: STD_LOGIC_VECTOR  (WIDTHQ-1 downto 0);
-signal product_reg, product_nxt: STD_LOGIC_VECTOR (WIDTHQ-1 downto 0);
+signal product_reg, product_nxt: STD_LOGIC_VECTOR (WIDTHP-1 downto 0);
 begin
 
 process(clk)
