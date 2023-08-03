@@ -58,7 +58,7 @@ type std_2d_short is array (WIDTHQ-1 downto 0) of
 -- wires that connect rows, m_s(0) is input
 signal m_s: std_2d;
 signal m_reg: std_2d_short;
-signal s_i_s, s_o_s: std_2d;
+signal s_i_s, s_o_s: std_2d_short;
 signal q_s, q_s_o: STD_LOGIC_VECTOR(WIDTHQ-1 downto 0);
 signal c_o_s: STD_LOGIC_VECTOR(WIDTHQ-1 downto 0);
 signal product_s : STD_LOGIC_VECTOR(WIDTHM + WIDTHQ - 1 downto 0);
@@ -72,14 +72,25 @@ begin
     m_reg(0) <= m_s(0);
  m_regs:
  for i in 1 to WIDTHQ-1 generate
-    registers:
-    entity work.reg
-    generic map(WIDTH => WIDTHM)
-    port map (clk => clk,
-              rstN => rstN,
-              d_i => m_s(i),
-              q_o => m_reg(i));
-    --m_reg(2*i-1) <= m_s(2*i-1);
+    generate_m_regs_even:
+    if (i mod 2 = 0) generate
+        registers:
+        entity work.reg
+        generic map(WIDTH => WIDTHM)
+        port map (clk => clk,
+                  rstN => rstN,
+                  d_i => m_s(i),
+                  q_o => m_reg(i));
+        --m_reg(2*i-1) <= m_s(2*i-1);
+    end generate generate_m_regs_even;
+ end generate;
+ 
+ m_wires:
+ for i in 1 to WIDTHQ-1 generate
+    generate_m_reg_odd:
+    if (i mod 2 = 1) generate
+        m_reg(i) <= m_s(i);
+    end generate generate_m_reg_odd;
  end generate;
  
  mul_array:
@@ -97,13 +108,35 @@ begin
                   c_o => c_o_s(i));
     end generate;
     
+    
     sum_signals:
     for i in 1 to WIDTHQ-1 generate
-            s_i_s(i)(WIDTHM-2 downto 0) <= s_o_s(i-1)(WIDTHM-1 downto 1);
-            s_i_s(i)(WIDTHM-1) <= c_o_s(i-1);
+            s_i_s_reg_generate:
+            if(i mod 2 = 0) generate
+                process(clk)
+                begin
+                    if(rising_edge(clk))then
+                        if(rstN = '0')then
+                            s_i_s(i) <= (others =>'0');
+                        else
+                            s_i_s(i)(WIDTHM-2 downto 0) <= s_o_s(i-1)(WIDTHM-1 downto 1);
+                            s_i_s(i)(WIDTHM-1) <= c_o_s(i-1);
+                        end if;
+                    end if;
+                end process;
+            end generate s_i_s_reg_generate; 
     end generate;
     
-    assign_output_lower:
+    sum_signals_wire:
+    for i in 1 to WIDTHQ-1 generate
+            s_i_s_reg_generate:
+            if(i mod 2 = 1) generate
+                s_i_s(i)(WIDTHM-2 downto 0) <= s_o_s(i-1)(WIDTHM-1 downto 1);
+                s_i_s(i)(WIDTHM-1) <= c_o_s(i-1);
+            end generate s_i_s_reg_generate; 
+    end generate;
+    
+    assign_output_loweraaaa:
     for i in 0 to WIDTHQ-2 generate --WIDTHQ = 3, WIDTHM = 4
             product_s(i) <= s_o_s(i)(0);
     end generate;

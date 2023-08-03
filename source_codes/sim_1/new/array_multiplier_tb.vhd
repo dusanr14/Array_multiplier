@@ -32,16 +32,16 @@ architecture Behavioral of array_multiplier_tb is
     -- Signals
     signal clk      : std_logic := '0';
     signal rstN     : std_logic := '1';
-    signal m_i      : std_logic_vector(3 downto 0) := "1101";
-    signal q_i      : std_logic_vector(2 downto 0) := "101";
-    signal product_o : std_logic_vector(6 downto 0);
+    signal m_i      : std_logic_vector(4 downto 0) := "11010";
+    signal q_i      : std_logic_vector(4 downto 0) := "10101";
+    signal product_o : std_logic_vector(9 downto 0);
 
     -- Instantiate the DUT (Design Under Test)
     component array_multiplier
         Generic(
-               WIDTHM : natural := 4;
-               WIDTHQ : natural := 3;
-               WIDTHP : natural := 7
+               WIDTHM : natural := 5;
+               WIDTHQ : natural := 5;
+               WIDTHP : natural := 10
         );
         Port(
             clk      : in std_logic;
@@ -56,9 +56,9 @@ begin
     -- Instantiate the DUT
     dut : array_multiplier
         generic map (
-            WIDTHM => 4,
-            WIDTHQ => 3,
-            WIDTHP => 7
+            WIDTHM => 5,
+            WIDTHQ => 5,
+            WIDTHP => 10
         )
         port map (
             clk      => clk,
@@ -87,8 +87,8 @@ begin
         wait for CLK_PERIOD;
 
         -- Test Case 1
-        m_i <= "1101";
-        q_i <= "101";
+        m_i <= "11010";
+        q_i <= "10101";
         wait for CLK_PERIOD * 10;
         -- The expected result for Test Case 1 should be "1001101"
         -- You can add an assert statement here to check if product_o is equal to "1001101"
