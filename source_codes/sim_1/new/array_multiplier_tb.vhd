@@ -81,14 +81,16 @@ begin
     stimulus_process: process
     begin
         -- Reset the module
+        rstN <= '1';
+        wait for 3*CLK_PERIOD;
         rstN <= '0';
-        wait for CLK_PERIOD;
+        wait for 2*CLK_PERIOD;
         rstN <= '1';
         wait for CLK_PERIOD;
 
         -- Test Case 1
         m_i <= "11010";
-        q_i <= "10101";
+        q_i <= "11111";
         wait for CLK_PERIOD * 10;
         -- The expected result for Test Case 1 should be "1001101"
         -- You can add an assert statement here to check if product_o is equal to "1001101"
