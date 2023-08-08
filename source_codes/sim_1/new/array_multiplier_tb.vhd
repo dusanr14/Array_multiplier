@@ -56,8 +56,26 @@ architecture Behavioral of array_multiplier_tb is
     
     signal temp: std_logic_vector(15 downto 0) := (others => '0');
     signal expected_o: std_logic_vector(15 downto 0) := (others => '0');
+    type std_2d is array (3 downto 0) of
+        std_logic_vector(15 downto 0);
+    signal reg1, reg2, reg3, reg4: std_logic_vector(15 downto 0);
 begin
     
+    process(clk)begin
+        if(rising_edge(clk))then
+            if(rstN = '0')then
+                reg1 <= (others => '0');
+                reg2 <= (others => '0');
+                reg3 <= (others => '0');
+                reg4 <= (others => '0');
+            else
+                reg1 <= std_logic_vector(unsigned(m_i) * unsigned(q_i));
+                reg2 <= reg1;
+                reg3 <= reg2;
+                reg4 <= reg3;
+            end if;
+        end if;
+    end process;
     -- Instantiate the DUT
     dut : array_multiplier
         generic map (
@@ -107,11 +125,12 @@ begin
         wait;
     end process;
     
+    
     process(clk)
     begin
         if(rising_edge(clk) and (rstN='1'))then
         expected_o <= std_logic_vector(unsigned(m_i)* unsigned(q_i));
-        assert (expected_o = product_o) report "FUCK expected = "& INTEGER'IMAGE(to_integer(unsigned(expected_o))) & 
+        assert (reg4 = product_o) report "FUCK expected = "& INTEGER'IMAGE(to_integer(unsigned(expected_o))) & 
                     ",real_value= " & INTEGER'IMAGE(to_integer(unsigned(product_o))) severity note;
         end if;
     end process;
