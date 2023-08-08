@@ -42,45 +42,42 @@ end stairs_registers;
 architecture Behavioral of stairs_registers is
 type std_2d_square is array (WIDTH-1 downto 0) of
     std_logic_vector(WIDTH-1 downto 0);
-signal d_reg: std_2d_square;
+signal d_nxt, d_reg: std_2d_square;
 begin
 
 
-d_reg(0) <= d_i;
+--not inportant
+d_nxt(0) <= d_i;
+d_reg(0) <= d_nxt(0);
+gen_stairs_reg:
+for i in 1 to WIDTH-1 generate
+    generate_reg_even:
+    if(i mod 2 = 0) generate
+    process(clk) begin
+        if(rising_edge(clk))then
+            if(rstN = '0')then
+                d_reg(i) <= (others => '0');
+            else
+                d_reg(i) <= d_nxt(i);
+            end if;
+        end if;
+    end process;
+    end generate generate_reg_even;
+    generate_wires_odd:
+    if(i mod 2 = 1) generate
+        d_reg(i) <= d_nxt(i);
+    end generate;
+end generate gen_stairs_reg;
 
-gen_stairs:
-for j in 1 to WIDTH-1 generate
-    gen_serial_registers:
-    for i in 1 to j generate
-        generate_reg:
-        if(j mod 2 = 0) generate
-            process(clk)
-            begin
-                if(rising_edge(clk))then
-                    if(rstN = '0')then
-                        d_reg(i)(j) <= '0';
-                    else
-                        d_reg(i)(j) <= d_reg(i-1)(j);
-                    end if;
-                end if;
-             end process;
-        end generate generate_reg;
-    end generate gen_serial_registers;
-end generate gen_stairs;
+gen_wires:
+for i in 1 to WIDTH-1 generate
+    d_nxt(i) <= d_reg(i-1);
+end generate;
 
-gen_stairs_wire:
-for j in 1 to WIDTH-1 generate
-    gen_serial_registers:
-    for i in 1 to j generate
-        generate_wires:
-        if(j mod 2 /= 0) generate
-            d_reg(i)(j) <= d_reg(i-1)(j);
-        end generate ;
-    end generate gen_serial_registers;
-end generate gen_stairs_wire;
-
+-- LSB output
+q_o(0) <= d_i(0);
 gen_output:
-for i in 0 to WIDTH-1 generate
+for i in 1 to WIDTH-1 generate
     q_o(i) <= d_reg(i)(i);
 end generate;
 end Behavioral;

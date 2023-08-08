@@ -10,7 +10,7 @@ architecture behavior of tb_stairs_registers is
 
     -- Component Declaration
     component stairs_registers
-        Generic( WIDTH: natural := 13);
+        Generic( WIDTH: natural := 15);
         Port ( clk : in STD_LOGIC;
                rstN : in STD_LOGIC;
                d_i : in STD_LOGIC_VECTOR (WIDTH-1 downto 0);
@@ -20,14 +20,14 @@ architecture behavior of tb_stairs_registers is
     -- Testbench Signals
     signal tb_clk : STD_LOGIC := '0';
     signal tb_rstN : STD_LOGIC := '1';
-    signal tb_d_in : STD_LOGIC_VECTOR(12 downto 0) := (others => '0');
-    signal tb_d_out : STD_LOGIC_VECTOR(12 downto 0);
+    signal tb_d_in : STD_LOGIC_VECTOR(14 downto 0) := (others => '0');
+    signal tb_d_out : STD_LOGIC_VECTOR(14 downto 0);
 
 begin
 
     -- Instantiate the IP
     uut: stairs_registers
-        Generic Map (WIDTH => 13)
+        Generic Map (WIDTH => 15)
         Port Map (clk => tb_clk,
                   rstN => tb_rstN,
                   d_i => tb_d_in,
@@ -54,11 +54,11 @@ begin
     -- Stimulus Process
     stimulus_process: process
     begin
-        tb_d_in <= "1010101010101"; -- Example input data
+        tb_d_in <= "101010101010101"; -- Example input data
         wait for 300 ns;
-        tb_d_in <= "1111111111111"; -- Another example input data
+        tb_d_in <= "111111111111111"; -- Another example input data
         wait for 300 ns;
-        tb_d_in <= "0000000000000";
+        tb_d_in <= "000000000000000";
         wait;
     end process stimulus_process;
 

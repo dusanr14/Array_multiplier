@@ -55,41 +55,44 @@ type std_2d is array (WIDTHQ downto 0) of
     std_logic_vector(WIDTHM-1 downto 0);
 type std_2d_short is array (WIDTHQ-1 downto 0) of
     std_logic_vector(WIDTHM-1 downto 0);
-type std_2d_q is array (WIDTHQ-1 downto 0) of
-    std_logic_vector(WIDTHM-1 downto 0);
--- m_s wires that connect rows, m_s(0) is input
-signal m_s, q_s: std_2d;
-signal m_reg, q_reg: std_2d_short;
+-- wires that connect rows, m_s(0) is input
+signal m_s: std_2d;
+signal m_reg: std_2d_short;
 signal s_i_s, s_o_s: std_2d_short;
-signal  q_s_o, q_reg_o: STD_LOGIC_VECTOR(WIDTHQ-1 downto 0);
+signal q_s, q_s_o: STD_LOGIC_VECTOR(WIDTHQ-1 downto 0);
 signal c_o_s: STD_LOGIC_VECTOR(WIDTHQ-1 downto 0);
+signal product_s_low, product_s_temp: STD_LOGIC_VECTOR(WIDTHQ-1 downto 0);
 signal product_s : STD_LOGIC_VECTOR(WIDTHM + WIDTHQ - 1 downto 0);
 begin
 
---assign input
-s_i_s(0) <= (others => '0');
-m_s(0) <= m_i;
-q_s(0) <= q_i;
-m_reg(0) <= m_s(0);
-q_reg(0) <= q_s(0);
-m_regs:
+ --assign input
+ s_i_s(0) <= (others => '0');
+ m_s(0) <= m_i;
+ --q_s <= q_i;
+ 
+ stairs_q:
+ entity work.stairs_registers
+    generic map(WIDTH => WIDTHQ)
+    port map(clk  => clk,
+             rstN => rstN,
+             d_i => q_i,
+             q_o => q_s);
+ m_reg(0) <= m_s(0);
+ m_regs:
  for i in 1 to WIDTHQ-1 generate
     generate_m_regs_even:
     if (i mod 2 = 0) generate
         registers:
-        entity work.reg
-        generic map(WIDTH => WIDTHQ)
-        port map (clk => clk,
-                  rstN => rstN,
-                  d_i => m_s(i),
-                  q_o => m_reg(i));
-        registers_q:
-        entity work.reg
-        generic map(WIDTH => WIDTHQ)
-        port map (clk => clk,
-                  rstN => rstN,
-                  d_i => q_s(i),
-                  q_o => q_reg(i));
+        process(clk)
+        begin
+            if(rising_edge(clk)) then
+                if(rstN = '0')then
+                    m_reg(i) <= (others => '0');
+                else
+                    m_reg(i) <= m_s(i);
+                end if;
+            end if;
+        end process;
     end generate generate_m_regs_even;
  end generate;
  
@@ -98,22 +101,8 @@ m_regs:
     generate_m_reg_odd:
     if (i mod 2 = 1) generate
         m_reg(i) <= m_s(i);
-        q_reg(i) <= q_s(i);
     end generate generate_m_reg_odd;
  end generate;
- 
- q_reg_o_gen:
- for i in 0 to WIDTHQ-1 generate
-    q_reg_o(i) <= q_reg(i)(i);
- end generate;
--- q_delay_regs:
--- entity work.stairs_registers
--- generic map(WIDTH => WIDTHQ)
--- port map( clk => clk,
---           rstN => rstN,
---           d_i => q_i,
---           q_o => q_s
--- );
  
  mul_array:
  for i in 0 to WIDTHQ-1 generate
@@ -121,13 +110,14 @@ m_regs:
     entity work.array_mult_row(behavioral)
         generic map (WIDTHM => WIDTHM)
         port map( m_i => m_reg(i), --32
-                  q_i => q_reg_o(i),
+                  q_i => q_s(i),
                   s_i => s_i_s(i), --32
                   c_i => '0', 
                   m_o => m_s(i+1), --32
                   q_o => q_s_o(i),
                   s_o => s_o_s(i), --32
                   c_o => c_o_s(i));
+         product_s_low(WIDTHQ-1-i) <= s_o_s(i)(0);
     end generate;
     
     sum_signals:
@@ -157,20 +147,29 @@ m_regs:
             end generate s_i_s_reg_generate; 
     end generate;
     
+
+    stairs_s:
+    entity work.stairs_registers
+    generic map(WIDTH => WIDTHQ)
+    port map(clk  => clk,
+             rstN => rstN,
+             d_i => product_s_low,
+             q_o => product_s_temp);
+             
     assign_output_lower:
-    for i in 0 to WIDTHQ-2 generate --WIDTHQ = 3, WIDTHM = 4
-            product_s(i) <= s_o_s(i)(0);
+    for i in 0 to WIDTHQ-2 generate
+            product_s(i) <= product_s_temp(WIDTHQ-1-i);
     end generate;
-    
+    -- concatanate output value
+    product_s(WIDTHM+WIDTHQ-1) <= c_o_s (WIDTHQ-1);    
     product_s((WIDTHM + WIDTHQ - 2) downto WIDTHQ-1) <= s_o_s(WIDTHQ-1);
-    product_s(WIDTHM+WIDTHQ-1) <= c_o_s (WIDTHQ-1);
-    
-    output_register:
+    --product_s(WIDTHQ-2 downto 0) <= product_s_low(WIDTHQ-2 downto 0);
+    -- output register
     process(clk)
     begin
-        if(rising_edge(clk))then
-            if(rstN = '0')then
-                product_o <= (others =>'0');
+        if(rising_edge(clk)) then
+            if(rstN = '0') then
+                product_o <= (others => '0');
             else
                 product_o <= product_s(WIDTHP-1 downto 0);
             end if;

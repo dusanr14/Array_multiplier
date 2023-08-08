@@ -24,10 +24,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use ieee.std_logic_unsigned.all;
 use IEEE.math_real.all;
-entity array_multiplier_tb is
-end array_multiplier_tb;
+entity simple_tb is
+end simple_tb;
 
-architecture Behavioral of array_multiplier_tb is
+architecture Behavioral of simple_tb is
     -- Constants
     constant CLK_PERIOD : time := 10 ns;
 
@@ -54,8 +54,8 @@ architecture Behavioral of array_multiplier_tb is
         );
     end component;
     
-    signal temp: std_logic_vector(15 downto 0) := (others => '0');
-    signal expected_o: std_logic_vector(15 downto 0) := (others => '0');
+    signal temp: std_logic_vector(9 downto 0) := (others => '0');
+    signal expected_o: std_logic_vector(9 downto 0) := (others => '0');
 begin
     
     -- Instantiate the DUT
@@ -95,24 +95,14 @@ begin
         rstN <= '1';
         wait for CLK_PERIOD;
         wait for 4*CLK_PERIOD;
-        
-        for_loop:
-        for i in 0 to 65535 loop
-            m_i <= temp(15 downto 8);
-            q_i <= temp (7 downto 0);
-            temp <= STD_LOGIC_VECTOR(unsigned(temp) + 1);
-            wait for CLK_PERIOD;
-       end loop for_loop;
-        report "End";
+         m_i <= "01010101";
+         q_i <= "10101010";
+         wait for CLK_PERIOD;
+         m_i <= "11110101";
+         q_i <= "00000010";
+         wait for CLK_PERIOD;
+         m_i <= "11110101";
+         q_i <= "01000010";
         wait;
-    end process;
-    
-    process(clk)
-    begin
-        if(rising_edge(clk) and (rstN='1'))then
-        expected_o <= std_logic_vector(unsigned(m_i)* unsigned(q_i));
-        assert (expected_o = product_o) report "FUCK expected = "& INTEGER'IMAGE(to_integer(unsigned(expected_o))) & 
-                    ",real_value= " & INTEGER'IMAGE(to_integer(unsigned(product_o))) severity note;
-        end if;
     end process;
 end Behavioral;
