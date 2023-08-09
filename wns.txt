@@ -8,4 +8,10 @@ wns
 	9ns, 111MHz, WNS = 0.355
 	8.3ns,120MHz,WNS = 0.111
 	8ns, 125MHz, WNS = NEGATIV
-	7ns, 125MHZ, WNS = 
+	7ns, 125MHZ, WNS =
+
+-- unsinged multiplier verified
+
+	10ns, 100MHz, WNS = 0.411
+	9ns , 111MHz, WNS = 0.226
+	8.7ns,115MHz, WNS = 0.116

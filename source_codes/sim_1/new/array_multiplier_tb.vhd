@@ -34,16 +34,16 @@ architecture Behavioral of array_multiplier_tb is
     -- Signals
     signal clk      : std_logic := '0';
     signal rstN     : std_logic := '1';
-    signal m_i      : std_logic_vector(7 downto 0) := (others => '0');
-    signal q_i      : std_logic_vector(7 downto 0) := (others => '0');
-    signal product_o : std_logic_vector(15 downto 0);
+    signal m_i      : std_logic_vector(8 downto 0) := (others => '0');
+    signal q_i      : std_logic_vector(8 downto 0) := (others => '0');
+    signal product_o : std_logic_vector(17 downto 0);
 
     -- Instantiate the DUT (Design Under Test)
     component array_multiplier
         Generic(
-               WIDTHM : natural := 8;
-               WIDTHQ : natural := 8;
-               WIDTHP : natural := 16
+               WIDTHM : natural := 9;
+               WIDTHQ : natural := 9;
+               WIDTHP : natural := 18
         );
         Port(
             clk      : in std_logic;
@@ -54,11 +54,10 @@ architecture Behavioral of array_multiplier_tb is
         );
     end component;
     
-    signal temp: std_logic_vector(15 downto 0) := (others => '0');
-    signal expected_o: std_logic_vector(15 downto 0) := (others => '0');
-    type std_2d is array (3 downto 0) of
-        std_logic_vector(15 downto 0);
-    signal reg1, reg2, reg3, reg4: std_logic_vector(15 downto 0);
+    signal temp: std_logic_vector(17 downto 0) := (others => '0');
+    signal expected_o: std_logic_vector(17 downto 0) := (others => '0');
+    signal reg1, reg2, reg3, reg4, reg5: std_logic_vector(17 downto 0);
+    signal good_flag: std_logic := '1';
 begin
     
     process(clk)begin
@@ -68,20 +67,22 @@ begin
                 reg2 <= (others => '0');
                 reg3 <= (others => '0');
                 reg4 <= (others => '0');
+                reg5 <= (others => '0');
             else
                 reg1 <= std_logic_vector(unsigned(m_i) * unsigned(q_i));
                 reg2 <= reg1;
                 reg3 <= reg2;
                 reg4 <= reg3;
+                reg5 <= reg4;
             end if;
         end if;
     end process;
     -- Instantiate the DUT
     dut : array_multiplier
         generic map (
-            WIDTHM => 8,
-            WIDTHQ => 8,
-            WIDTHP => 16
+            WIDTHM => 9,
+            WIDTHQ => 9,
+            WIDTHP => 18
         )
         port map (
             clk      => clk,
@@ -113,15 +114,20 @@ begin
         rstN <= '1';
         wait for CLK_PERIOD;
         wait for 4*CLK_PERIOD;
-        
+        --wait for CLK_PERIOD/2;
         for_loop:
-        for i in 0 to 65535 loop
-            m_i <= temp(15 downto 8);
-            q_i <= temp (7 downto 0);
+        for i in 0 to 262113 loop
+            m_i <= temp(17 downto 9);
+            q_i <= temp (8 downto 0);
             temp <= STD_LOGIC_VECTOR(unsigned(temp) + 1);
             wait for CLK_PERIOD;
        end loop for_loop;
         report "End";
+        if(good_flag = '1') then
+            report "Verified sucesfully!";
+        else
+            report "Bug occured!!!";
+        end if;
         wait;
     end process;
     
@@ -129,9 +135,12 @@ begin
     process(clk)
     begin
         if(rising_edge(clk) and (rstN='1'))then
-        expected_o <= std_logic_vector(unsigned(m_i)* unsigned(q_i));
-        assert (reg4 = product_o) report "FUCK expected = "& INTEGER'IMAGE(to_integer(unsigned(expected_o))) & 
-                    ",real_value= " & INTEGER'IMAGE(to_integer(unsigned(product_o))) severity note;
+            expected_o <= std_logic_vector(unsigned(m_i)* unsigned(q_i));
+            if (reg5 /= product_o) then 
+                report "FUCK expected = "& INTEGER'IMAGE(to_integer(unsigned(expected_o))) & 
+                        ",real_value= " & INTEGER'IMAGE(to_integer(unsigned(product_o))) severity note;
+                good_flag <= '0';   
+            end if;
         end if;
     end process;
 end Behavioral;

@@ -32,7 +32,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 --use UNISIM.VComponents.all;
 
 entity stairs_registers is
-    Generic( WIDTH: natural := 32);
+    Generic(EVEN_ODD: string := "EVEN";
+            WIDTH: natural := 32);
     Port ( clk : in STD_LOGIC;
            rstN : in STD_LOGIC;
            d_i : in STD_LOGIC_VECTOR (WIDTH-1 downto 0);
@@ -51,22 +52,45 @@ d_nxt(0) <= d_i;
 d_reg(0) <= d_nxt(0);
 gen_stairs_reg:
 for i in 1 to WIDTH-1 generate
-    generate_reg_even:
-    if(i mod 2 = 0) generate
-    process(clk) begin
-        if(rising_edge(clk))then
-            if(rstN = '0')then
-                d_reg(i) <= (others => '0');
-            else
-                d_reg(i) <= d_nxt(i);
+    --generate register every even step
+    generate_even:
+    if(EVEN_ODD = "EVEN") generate
+        generate_reg_even:
+        if(i mod 2 = 0) generate
+        process(clk) begin
+            if(rising_edge(clk))then
+                if(rstN = '0')then
+                    d_reg(i) <= (others => '0');
+                else
+                    d_reg(i) <= d_nxt(i);
+                end if;
             end if;
-        end if;
-    end process;
-    end generate generate_reg_even;
-    generate_wires_odd:
-    if(i mod 2 = 1) generate
-        d_reg(i) <= d_nxt(i);
-    end generate;
+        end process;
+        end generate generate_reg_even;
+        generate_wires_odd:
+        if(i mod 2 = 1) generate
+            d_reg(i) <= d_nxt(i);
+        end generate;
+    end generate generate_even;
+    generate_odd:
+    if(EVEN_ODD = "ODD") generate
+        generate_reg_even:
+        if(i mod 2 = 1) generate
+        process(clk) begin
+            if(rising_edge(clk))then
+                if(rstN = '0')then
+                    d_reg(i) <= (others => '0');
+                else
+                    d_reg(i) <= d_nxt(i);
+                end if;
+            end if;
+        end process;
+        end generate generate_reg_even;
+        generate_wires_odd:
+        if(i mod 2 = 0) generate
+            d_reg(i) <= d_nxt(i);
+        end generate;
+    end generate generate_odd;
 end generate gen_stairs_reg;
 
 gen_wires:

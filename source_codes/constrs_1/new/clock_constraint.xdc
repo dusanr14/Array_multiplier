@@ -1,2 +1,2 @@
 #Clock signal
-create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5.00} [get_ports {clk}];
+create_clock -add -name sys_clk_pin -period 8.70 -waveform {0 4.35} [get_ports {clk}];
