@@ -24,10 +24,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use ieee.std_logic_unsigned.all;
 use IEEE.math_real.all;
-entity simple_tb is
-end simple_tb;
+entity simple_valid_tb is
+end simple_valid_tb;
 
-architecture Behavioral of simple_tb is
+architecture Behavioral of simple_valid_tb is
     -- Constants
     constant CLK_PERIOD : time := 10 ns;
 
@@ -35,12 +35,15 @@ architecture Behavioral of simple_tb is
     signal clk      : std_logic := '0';
     signal rstN     : std_logic := '1';
     signal m_i      : std_logic_vector(8 downto 0) := (others => '0');
+    signal m_valid_i: std_logic;
     signal q_i      : std_logic_vector(8 downto 0) := (others => '0');
+    signal q_valid_i: std_logic;
     signal product_o : std_logic_vector(17 downto 0);
-
+    signal product_valid_o: std_logic;
     -- Instantiate the DUT (Design Under Test)
-    component array_multiplier_unsigned
+    component array_multiplier_top
         Generic(
+               SIGNED_UNSIGNED: string  := "SIGNED";
                WIDTHM : natural := 9;
                WIDTHQ : natural := 9;
                WIDTHP : natural := 18
@@ -49,16 +52,20 @@ architecture Behavioral of simple_tb is
             clk      : in std_logic;
             rstN     : in std_logic;
             m_i      : in std_logic_vector(WIDTHM-1 downto 0);
+            m_valid_i: in std_logic;
             q_i      : in std_logic_vector(WIDTHQ-1 downto 0);
-            product_o : out std_logic_vector(WIDTHP-1 downto 0)
+            q_valid_i: in std_logic;
+            product_o : out std_logic_vector(WIDTHP-1 downto 0);
+            product_valid_o: out std_logic
         );
     end component;
     
 begin
     
     -- Instantiate the DUT
-    dut : array_multiplier_unsigned
+    dut : array_multiplier_top
         generic map (
+            SIGNED_UNSIGNED => "SIGNED",
             WIDTHM => 9,
             WIDTHQ => 9,
             WIDTHP => 18
@@ -67,8 +74,11 @@ begin
             clk      => clk,
             rstN     => rstN,
             m_i      => m_i,
+            m_valid_i => m_valid_i,
             q_i      => q_i,
-            product_o => product_o
+            q_valid_i => q_valid_i,
+            product_o => product_o,
+            product_valid_o => product_valid_o
         );
 
     -- Clock process
@@ -84,7 +94,8 @@ begin
     stimulus_process: process
         
     begin
-        
+        m_valid_i <= '0';
+        q_valid_i <= '0';
         -- Reset the module
         rstN <= '1';
         wait for 3*CLK_PERIOD;
@@ -94,11 +105,15 @@ begin
         wait for CLK_PERIOD;
         wait for 4*CLK_PERIOD;
          m_i <= "010101010";
-         q_i <= "101010101";
+         q_i <= "101010100";
          wait for CLK_PERIOD;
+         q_valid_i <= '1';
+         m_valid_i <= '1';
          m_i <= "111101010";
          q_i <= "000000100";
          wait for CLK_PERIOD;
+         q_valid_i <= '0';
+         m_valid_i <= '0';
          m_i <= "111101010";
          q_i <= "010000100";
          wait for CLK_PERIOD;

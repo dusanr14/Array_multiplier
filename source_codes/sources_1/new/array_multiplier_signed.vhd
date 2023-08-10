@@ -54,9 +54,10 @@ end array_multiplier_signed;
 architecture Behavioral of array_multiplier_signed is
 signal m_i_s: STD_LOGIC_VECTOR(WIDTHM-1 downto 0);
 signal q_i_s: STD_LOGIC_VECTOR(WIDTHQ-1 downto 0);
-signal product_o_s: STD_LOGIC_VECTOR(WIDTHP-2 downto 0);
+signal product_o_s: STD_LOGIC_VECTOR(WIDTHP-1 downto 0);
+signal product_s: STD_LOGIC_VECTOR(WIDTHP-1 downto 0);
 signal sign: std_logic;
-signal sign_reg: STD_LOGIC_VECTOR(WIDTHQ/2-1 downto 0);
+signal sign_reg: STD_LOGIC_VECTOR(WIDTHQ/2 downto 0);
 begin
 
 -- first pipeline satage- determant sign of operands
@@ -87,9 +88,27 @@ begin
     end if;
 end process;
 
-sign_reg(0) <= sign;
+gen_if_even:
+if(WIDTHQ mod 2 = 0) generate
+    sign_reg(0) <= sign;
+end generate;
+
+gen_if_odd:
+if(WIDTHQ mod 2 = 1) generate
+   process(clk)
+    begin
+        if(rising_edge(clk))then
+            if(rstN = '0') then
+                sign_reg(0) <= '0';
+            else
+                sign_reg(0) <= sign;
+            end if;
+        end if;
+    end process;
+end generate;
+
 generate_sign_pipeline:
-for i in 1 to WIDTHQ/2-1 generate
+for i in 1 to WIDTHQ/2 generate
     process(clk)
     begin
         if(rising_edge(clk))then
@@ -105,15 +124,15 @@ end generate;
 array_multiplier: 
     entity work.array_multiplier
     generic map(
-        WIDTHM => WIDTHM-1,
-        WIDTHQ => WIDTHQ-1,
-        WIDTHP => WIDTHP-1
+        WIDTHM => WIDTHM,
+        WIDTHQ => WIDTHQ,
+        WIDTHP => WIDTHP
     )
     port map(
         clk => clk,
         rstN => rstN,
-        m_i => m_i_s(WIDTHM-2 downto 0),
-        q_i => q_i_s(WIDTHQ-2 downto 0),
+        m_i => m_i_s,
+        q_i => q_i_s,
         product_o => product_o_s
     );
 
@@ -122,14 +141,16 @@ process(clk)
 begin
     if(rising_edge(clk)) then
         if(rstN = '0') then
-            product_o <= (others => '0');
+            product_s <= (others => '0');
         else
-            if(sign_reg(WIDTHQ/2-1) = '0') then
-                product_o <= '0' & product_o_s;
+            if(sign_reg(WIDTHQ/2) = '0') then
+                product_s <= product_o_s;
             else
-                product_o <= std_logic_vector(unsigned(not ('0' & product_o_s)) + 1);
+                product_s <= std_logic_vector(unsigned(not product_o_s) + 1);
             end if;
         end if;
     end if;
 end process;
+
+product_o <= product_s;
 end Behavioral;

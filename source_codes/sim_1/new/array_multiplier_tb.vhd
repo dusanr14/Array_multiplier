@@ -137,7 +137,7 @@ begin
         if(rising_edge(clk) and (rstN='1'))then
             expected_o <= std_logic_vector(unsigned(m_i)* unsigned(q_i));
             if (reg5 /= product_o) then 
-                report "FUCK expected = "& INTEGER'IMAGE(to_integer(unsigned(expected_o))) & 
+                report "BUG! expected = "& INTEGER'IMAGE(to_integer(unsigned(expected_o))) & 
                         ",real_value= " & INTEGER'IMAGE(to_integer(unsigned(product_o))) severity note;
                 good_flag <= '0';   
             end if;
